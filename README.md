@@ -14,13 +14,17 @@ WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 
 Selected examples:
 
-| Style Transfer | Keyword Spotting |
-| :--: | :--: 
-| ![](media/style_transfer.gif) | ![](media/keyword_spotting.gif) | 
+| [Style Transfer regular](example_style_transfer) & [arbitrary](example_style_transfer_arbitrary) | [Object Recognition](example_yolo_v4) | [CharRnn (Frozen Graph)](example_basics_frozen_graph) |
+| :--: | :--: | :--: |
+| ![](media/style_transfer.gif) | ![](media/yolo.gif) |  ![](media/charRnn.gif) | 
 
- Pose Estimation | Pix2Pix |
- | :--: | :--: |
-![](media/movenet.gif) | ![](media/pix2pix.gif) | 
+| [Pose Estimation](example_movenet) | [Pix2Pix](example_pix2pix) | [Keyword Spotting](example_keyword_spotting) |
+| :--: | :--: | :--: |
+| ![](media/movenet.gif) | ![](media/pix2pix.gif) | ![](media/keyword_spotting.gif)  |
+
+| [Video Matting](example_video_matting) |
+| :--: |
+| ![](media/video_matting.gif) | 
 
 Description
 -----------
@@ -48,7 +52,7 @@ Minimal quick start for a Unix shell to clone cppflow, download pre-built Tensor
 
 ```shell
 cd addons
-git clone git@hertz-gitlab.zkm.de:Hertz-Lab/Research/intelligent-museum/ofxTensorFlow2.git
+git clone https://github.com/zkmkarlsruhe/ofxTensorFlow2.git
 cd ofxTensorFlow2
 git submodule update --init --recursive
 ./scripts/download_tensorflow.sh
@@ -64,9 +68,9 @@ Requirements
 
 * openFrameworks
 * Operating systems:
-  - Linux, 64-bit, x86
-  - macOS 10.14 (Mojave) or higher, 64-bit, x86
-  - Windows, 64-bit x86 (*should* work, not tested)
+  - Linux, 64-bit, x86_64
+  - macOS 10.14 (Mojave) or higher, 64-bit, x86_64 & arm64 (the latter via non-official builds)
+  - Windows, 64-bit, x86_64 (*should* work, not tested)
 
 To use ofxTensorFlow2, first you need to download and install openFrameworks. The examples are developed against the latest release version of openFrameworks on <http://openframeworks.cc/download>.
 
@@ -79,11 +83,11 @@ The main supported operating systems & architectures are those which have pre-bu
 Installation and Build
 ----------------------
 
-Clone (or download and extract) this repository to the addon folder of openFrameworks. Replace OF_ROOT with the path to your openFrameworks installation
+Clone (or download and extract) this repository to the addon folder of openFrameworks. Replace OF_ROOT with the path to your openFrameworks installation.
 
 ```shell
 cd OF_ROOT/addons
-git clone git@hertz-gitlab.zkm.de:Hertz-Lab/Research/intelligent-museum/ofxTensorFlow2.git
+git clone https://github.com/zkmkarlsruhe/ofxTensorFlow2.git
 ```
 
 ### Dependencies
@@ -116,6 +120,12 @@ When opting for GPU support set the `TYPE` script variable:
 
 ```shell 
 TYPE=gpu ./scripts/download_tensorflow.sh
+```
+
+Additionally, to use a specific version supply it as the first argument:
+
+```shell
+./scripts/download_tensorflow.sh 2.7.0
 ```
 
 See <https://www.tensorflow.org/install/gpu> for more information on GPU support for TensorFlow.
@@ -164,7 +174,9 @@ _Note: When using libtensorflow installed to the system, the `LD_LIBRARY_PATH` e
 
 ### macOS
 
-The cppflow library requires C++14 which needs to be enabled when building on macOS.
+The cppflow library requires C++14 (minimum) or C++17 which needs to be enabled when building on macOS.
+
+_Note: As of summer 2022, C++17 support is only available for the development version of openFrameworks. If you are using a release version and have build issues, try C++14 instead._
 
 libtensorflow is provided as pre-compiled dynamic libraries. On macOS these `.dylib` files need to be configured and copied into the build macOS .app. These steps are automated via the `scripts/macos_install_libs.sh` script and can be invoked when building, either by Xcode or the Makefiles.
 
@@ -172,7 +184,7 @@ Alternatively, you can use libtensorflow compiled and installed to the system, i
 
 #### Xcode build
 
-Enable C++14 features by changing the `CLANG_CXX_LANGUAGE_STANDARD` define in `OF_ROOT/libs/openFrameworksCompiled/project/osx/CoreOF.xcconfig`, for example:
+Enable C++14 or C++17 features by changing the `CLANG_CXX_LANGUAGE_STANDARD` define in `OF_ROOT/libs/openFrameworksCompiled/project/osx/CoreOF.xcconfig`, for example:
 
 ```makefile
 CLANG_CXX_LANGUAGE_STANDARD[arch=x86_64] = c++14
@@ -190,7 +202,7 @@ $OF_PATH/addons/ofxTensorFlow2/scripts/macos_install_libs.sh "$TARGET_BUILD_DIR/
 
 #### Makefile build
 
-Enable C++14 features by changing `-std=c++11` to `-std=c++14` on line 142 in `OF_ROOT/libs/openFrameworksCompiled/project/osx/config.osx.default.mk`:
+Enable C++14 or C++17 features by changing `-std=c++11` to `-std=c++14` or `-std=c++17` on line 142 in `OF_ROOT/libs/openFrameworksCompiled/project/osx/config.osx.default.mk`:
 
 ```makefile
 PLATFORM_CXXFLAGS += -std=c++14
@@ -233,7 +245,7 @@ The example projects are located in the `example_XXXX` directories.
 
 ### Downloading Pre-Trained Models
 
-Each example contains code to create a neural network and export it in the [SavedModel format](https://www.tensorflow.org/guide/saved_model). Neural networks require training which may take hours or days in order to produce a satisfying output, therefore we provide pre-trained models which you can download as ZIP files, either from the release page on GitHub or from a public shared link here:
+Each example contains code to create a neural network and export it in the [SavedModel format](https://www.tensorflow.org/guide/saved_model) or previous frozen GraphDef format. Neural networks require training which may take hours or days in order to produce a satisfying output, therefore we provide pre-trained models which you can download as ZIP files, either from the release page on GitHub or from a public shared link here:
 
 <https://cloud.zkm.de/index.php/s/gfWEjyEr9X4gyY6>
 
@@ -287,13 +299,13 @@ Simply select ofxTensorFlow2 from the available addons in the OF ProjectGenerato
 
 #### Model Format
 
-ofxTensorFlow2 works with the TensorFlow 2 [SavedModel format](https://www.tensorflow.org/guide/saved_model).
+ofxTensorFlow2 works with the TensorFlow [SavedModel format](https://www.tensorflow.org/guide/saved_model) (preferred) and the older TensorFlow 1 frozen GraphDef format (legacy).
 
 When referring to the "SavedModel" we mean the parent folder of the exported neural network containing two subfolder `assets` and `variables` and a `saved_model.pb` file. Do not change anything inside this folder, however renaming the folder is permitted. Keep in mind to use the correct file path within the application.
 
 #### Pretrained Models
 
-Often you don't need or want to train your models from scratch. Therefor, you should take a look at the [TF Hub](tfhub.dev). As TF2 is still rather new, there is not always a SavedModel for your purpose. Besides tfhub.dev you can search GitHub for a TF2 implementation of your model. A great place to start may be [here](https://github.com/Amin-Tgz/awesome-tensorflow-2). If you dont find a pretrained model, it is still easier to run/extend the code of an existing project instead of starting from scratch.
+Often you don't need or want to train your models from scratch. Therefor, you should take a look at the [TF Hub](tfhub.dev). As TF2 is still rather new, there is not always a SavedModel for your purpose. Besides tfhub.dev you can search GitHub for a TF2 implementation of your model. A great place to start may be [here](https://github.com/Amin-Tgz/awesome-tensorflow-2). If you do not find a pre-trained model, it is still easier to run/extend the code of an existing project instead of starting from scratch.
 
 If you happen to find a SavedModel that suits you, but actually don't know the in and output specifications, use the `saved_model_cli` that comes with TensorFlow. For example:
 ```bash
@@ -372,7 +384,7 @@ Get familiar with __Keras__. Since TensorFlow 2, [Keras](https://keras.io) is th
 Get some __structure__ for your project. Your project could look a little bit like this:
 
 * `data`: stores scripts to download and maybe process some data
-* `src`: contains Python code for the model, preprocessing and train, test and eval procedures
+* `src`: contains Python code for the model, pre-processing and train, test and eval procedures
 * `main.py`: often serves as a front to call the train, eval or test scripts
 * `config.py`: stores high level parameters such as learning rate, batch size, etc. Edit this file for different experiments. Formats other than .py are fine too, but it's very easy to integrate. It's a good choice to save this file along with trained models.
 * `requirements.txt`: contains required packages
