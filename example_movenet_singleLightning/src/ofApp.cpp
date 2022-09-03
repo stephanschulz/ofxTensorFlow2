@@ -20,6 +20,8 @@ void ofApp::setup() {
     
 #ifdef USE_LIVE_VIDEO
     // setup video grabber
+    video.listDevices();
+    video.setDeviceID(2);
     video.setDesiredFrameRate(30);
     video.setup(camWidth, camHeight);
 #else
